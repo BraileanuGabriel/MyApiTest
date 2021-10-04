@@ -20,18 +20,13 @@ class ProductHighlight(generics.GenericAPIView):
 def api_root(request, format=None):
     return Response({
         'Products': reverse('products-list', request=request, format=format),
-        'Add one product': reverse('add', request=request, format=format)
     })
 
 
-class ProductsView(generics.ListAPIView):
+class ProductsView(generics.ListCreateAPIView):
     queryset = Producte.objects.all()
     serializer_class = ProductsSerializer
 
-
-class ProductsAdd(generics.CreateAPIView):
-    queryset = Producte.objects.all()
-    serializer_class = ProductAddSerializer
 
 
 class ProductView(generics.RetrieveUpdateDestroyAPIView):
