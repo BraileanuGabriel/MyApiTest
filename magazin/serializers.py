@@ -1,29 +1,47 @@
 from rest_framework import serializers
-from .models import Producte
+
+from .models import Producte, ProductImage
 
 
-class ProductsSerializer(serializers.HyperlinkedModelSerializer):
+class ImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = "__all__"
+
+
+class ProductsSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = Producte
-        fields = '__all__'
-        # write_only_fields = ['description', 'add_at', 'photo2', 'photo3', 'sku']
+        fields = ['url', 'name', 'price', 'image', 'description', 'sku']
         extra_kwargs = {
             'description': {'write_only': True},
-            # 'add_at': {'write_only': True},
-            'photo2': {'write_only': True},
-            'photo3': {'write_only': True},
-            'sku': {'write_only': True},
+            'sku': {'write_only': True}
         }
+
+    def get_image(self, obj):
+        image = obj.productimage_set.first()
+        if image:
+            request = self.context.get("request")
+            return request.build_absolute_uri(image.image.url)
+        else:
+            return None
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    images = serializers.SerializerMethodField()
+
     class Meta:
         model = Producte
-        fields = ['name', 'price', 'description', 'add_at', 'photo1', 'photo2', 'photo3', 'sku']
-        read_only_fields = ['add_at', 'photo1', 'photo2', 'photo3']
+        fields = "__all__"
 
+    def get_images(self, obj):
+        urls_list = []
+        images = obj.productimage_set.all()
+        request = self.context.get("request")
+        for image in images:
+            urls_list.append(request.build_absolute_uri(image.image.url))
 
-class ProductAddSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Producte
-        fields = ['name', 'price', 'description', 'add_at', 'photo1', 'photo2', 'photo3', 'sku']
+        return urls_list
+
